@@ -1,0 +1,22 @@
+{
+  "name": "rating-tracker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "run": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Rpd-Strike/Rating-tracker.git"
+  },
+  "author": "Felix Puscasu",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Rpd-Strike/Rating-tracker/issues"
+  },
+  "homepage": "https://github.com/Rpd-Strike/Rating-tracker#readme",
+  "dependencies": {
+    "yarn": "^1.22.10"
+  }
+}
