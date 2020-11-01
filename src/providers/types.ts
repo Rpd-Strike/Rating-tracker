@@ -33,3 +33,14 @@ export interface CF_User
     avatar: string,
     titlePhoto: string
 }
+
+export interface CF_RatingChange
+{
+    contestId: number,
+    contestName: string,
+    handle: string,
+    rank: number,
+    ratingUpdateTimeSeconds: number,
+    oldRating: number,
+    newRating: number
+}

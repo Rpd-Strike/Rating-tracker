@@ -13,8 +13,18 @@ export async function PlotRatingSeries(provName: ProviderName)
 
     if (rating === undefined) {
         console.log("User not existent or another error occured :/");
-        return ;
     }
-    
-    console.log("Is this your rating? " + rating);
+    else {
+        console.log("Is this your rating? " + rating);
+    }
+
+    // second part
+    const series = await provider.getUserRatingSeries(username, new Date(2020, 1), new Date(2020, 9));
+    if (series === undefined) {
+        console.log("Could not retrieve rating history");
+    }
+    else {
+        console.log("I got this rating history for " + username);
+        console.log(JSON.stringify(series, null, 2));
+    }
 }
