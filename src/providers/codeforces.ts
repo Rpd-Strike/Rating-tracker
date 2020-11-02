@@ -39,7 +39,7 @@ class CodeforcesProvider extends Provider
                 if (resp.status != "OK")
                     throw new Error("Status not OK from codeforces");
 
-                console.log(JSON.stringify(resp.result, null, 2));
+                // console.log(JSON.stringify(resp.result, null, 2));
 
                 const result = resp.result as CF_RatingChange[];
 
@@ -49,7 +49,8 @@ class CodeforcesProvider extends Provider
                     series: result.map(entry => {
                         return {
                             time: new Date(entry.ratingUpdateTimeSeconds * 1000),
-                            rating: entry.newRating
+                            rating: entry.newRating,
+                            oldRating: entry.oldRating
                         }
                     })
                 };

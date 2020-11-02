@@ -1,30 +1,24 @@
 // Rating Time series
-import { providerCreator, ProviderName } from "../providers";
-import { RLSync } from "../lib/readline";
+import * as fs from "fs";
 
-// TODO: just a test
-// Replace with actual plotting
-export async function PlotRatingSeries(provName: ProviderName)
+import { providerCreator, ProviderName, RatingSeries } from "../providers";
+
+
+
+function showSummmary(receivedData: RatingSeries[][])
 {
-    const provider = providerCreator(provName);
+    const showData = receivedData.map(group => 
+        group.map(data => ({
+            ...data,
+            series: data.series.length // Show only the length
+        }))
+    )
 
-    let username = RLSync("Enter condeforces handle: ");
-    const rating = await provider.getUserRating(username);
+    console.log(JSON.stringify(showData, null, 2));
+}
 
-    if (rating === undefined) {
-        console.log("User not existent or another error occured :/");
-    }
-    else {
-        console.log("Is this your rating? " + rating);
-    }
-
-    // second part
-    const series = await provider.getUserRatingSeries(username, new Date(2020, 1), new Date(2020, 9));
-    if (series === undefined) {
-        console.log("Could not retrieve rating history");
-    }
-    else {
-        console.log("I got this rating history for " + username);
-        console.log(JSON.stringify(series, null, 2));
-    }
+// TODO: What library to use for plotting?
+export function PlotRatingSeries(data: RatingSeries[][])
+{
+    showSummmary(data);
 }

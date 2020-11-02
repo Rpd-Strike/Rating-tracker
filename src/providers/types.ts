@@ -7,7 +7,8 @@ export interface RatingSeries
     provider: ProviderName
     series: Array<{
         time: Date,
-        rating: number
+        rating: number,
+        oldRating: number
     }>
 }
 
