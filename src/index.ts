@@ -7,8 +7,10 @@ async function main()
 {
     const filePath = "input/CF-handles.txt";
     const provName: ProviderName = "Codeforces";
-    const startTime = new Date(2020, 1);
-    const endTime = new Date(2020, 4);
+    let startTime = new Date(2018, 2);
+    // let startTime = undefined;
+    let endTime = new Date(2021, 4);
+
 
     // Read users
     const userGroups = getUserGroupsFromFile(filePath);
@@ -30,7 +32,7 @@ async function main()
     }
 
     // Plot the ratings
-    PlotRatingSeries(receivedData as RatingSeries[][]);
+    PlotRatingSeries(receivedData as RatingSeries[][], startTime, endTime);
 }
 
 function startRatingTracker()
