@@ -6,9 +6,9 @@ export abstract class Provider
 
     public readonly name: ProviderName;
     
-    public async abstract getUserRating(username: string): Promise<number | void>;
+    public abstract getUserRating(username: string): Promise<number | void>;
 
-    public async abstract getUserRatingSeries(
+    public abstract getUserRatingSeries(
         username: string, timeBegin?: Date, timeEnd?: Date): Promise<RatingSeries | void>
 }
 
