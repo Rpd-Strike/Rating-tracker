@@ -7,9 +7,12 @@ async function main()
 {
     const filePath = "input/CF-handles.txt";
     const provName: ProviderName = "Codeforces";
-    let startTime = new Date(2018, 2);
-    // let startTime = undefined;
-    let endTime = new Date(2021, 4);
+    
+    // let startTime = new Date(2020, 5);
+    let startTime: Date = undefined;
+    
+    // let endTime = new Date(2021, 4);
+    let endTime: Date = undefined;
 
 
     // Read users
@@ -31,14 +34,14 @@ async function main()
         throw new Error("Error getting RatingSeries from codeforces");
     }
 
-    // Plot the ratings
+    // Plot the ratings   
     PlotRatingSeries(receivedData as RatingSeries[][], startTime, endTime);
 }
 
-function startRatingTracker()
+async function startRatingTracker()
 {
     try {
-        main()
+        await main();
     }
     catch (err) {
         console.error("Error caught in the main process:")

@@ -1,10 +1,7 @@
-import { hsl, rgb } from 'd3';
-import { plot, stack, clear, Plot, Layout } from 'nodeplotlib';
-import { Shape } from 'nodeplotlib/dist/lib/models/plotly.js';
+import { plot, Plot } from 'nodeplotlib';
+// import { Shape } from 'nodeplotlib/dist/lib/models/plotly.js';
 
 import { RatingSeries } from "../providers";
-
-
 
 function showSummmary(receivedData: RatingSeries[][])
 {
@@ -22,9 +19,7 @@ function showSummmary(receivedData: RatingSeries[][])
 export function PlotRatingSeries(data: RatingSeries[][],
     startTime: Date, endTime: Date)
 {
-    const WeeksFromMS = (ms: number) => {
-        return ms / 1000 / 60 / 60 / 24 / 7;
-    }
+    let counter = 0;
 
     const generateRandomColorString = () => {
         const list = [
@@ -38,21 +33,15 @@ export function PlotRatingSeries(data: RatingSeries[][],
             "#f781bf",
             "#999999"
         ];
-        if (this.cnt === undefined) {
-            this.cnt = 0;
-        }
 
-        ++this.cnt;
-        console.log("this cnt: ", this.cnt);
+        ++counter;
 
-        if (this.cnt <= list.length)
-            return list[this.cnt - 1];
+        if (counter <= list.length)
+            return list[counter - 1];
     
         return Math.random().toString(16).slice(-6);
-
     }
 
-    
     const plotData: Plot[] = [];
     data.forEach(ratingGroup => {
         const color = generateRandomColorString();
@@ -70,28 +59,12 @@ export function PlotRatingSeries(data: RatingSeries[][],
                     color: color
                 },
                 name: userRating.username,
-                // marker: {
-                //     colorbar: {
-                //         tickformat: "%Y %M %D"
-                //     }
-                // }
                 mode: "lines+markers"
             })
         })
     })
 
-    const shapes: Partial<Shape>[] = [
-    // {
-    //     type: "line", 
-    //     x0: startTime, x1: endTime, 
-    //     y0: 2100, y1: 2100, 
-    //     opacity: 0.4
-    // }
-    ];
-
-    plot(plotData, {xaxis: {tickangle: 35}, shapes: shapes});
-    
-    // showSummmary(data);
+    plot(plotData, {xaxis: {tickangle: 35}, sliders: [{visible: true}], width: 1200});
 }
 
 // Useless code that transforms Date in amount of weeks, offsetted with 0
