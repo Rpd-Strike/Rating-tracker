@@ -1,6 +1,7 @@
-import { CF_RatingChange, CF_User, ProviderName, RatingSeries } from "./types";
+import { CF_Contest, CF_RatingChange, CF_User, Contest, ProviderName, RatingSeries, StandingsEntry } from "./types";
 import { Provider } from "./provider";
 import "isomorphic-fetch"
+import RateLimiterQueue from "../Queues/RateLimiterQueue";
 
 class CodeforcesProvider extends Provider
 {
@@ -12,6 +13,17 @@ class CodeforcesProvider extends Provider
     protected queue: number[] = [];
     protected readonly timeBetweenRequests = 2020; // milli-seconds
     protected lastTimeQuery = new Date(2000, 1, 1);
+
+    protected rateLimiter: RateLimiterQueue = new RateLimiterQueue(2000, 1);
+
+    protected convert_CF_Contest_to_Contest(CF_contest: CF_Contest): Contest
+    {
+        const obj = {
+            ...CF_contest,
+            startTime: CF_contest.startTimeSeconds * 1000
+        } 
+        return obj;
+    }
 
     readonly msToTime = (ms: number): string =>
     {
@@ -128,6 +140,55 @@ class CodeforcesProvider extends Provider
         });
 
         this.popFromQueue();
+
+        return resp;
+    }
+
+    public async getContestList(): Promise<Contest[]> {
+        const queryString = `contest.list`;
+        
+        await this.rateLimiter.getInQueue();
+
+        let resp: Contest[] = await fetch(this.baseURL + queryString)
+            .then(resp => resp.json())
+            .then(resp => {
+                console.log("contest data: ", resp.status)
+                if (resp.status == "OK") {
+                    const contests = resp.result as CF_Contest[];
+                    return contests.map(this.convert_CF_Contest_to_Contest);
+                }
+                throw new Error('Status not OK from cf: contest.list');
+            })
+            .catch(err => {
+                console.log("Error when fetching contest list: ", err);
+                return [];
+            })
+
+
+        return resp;
+    }
+
+    public async getContestData(contest: Contest): Promise<StandingsEntry[]> {
+        const queryString = `contest.ratingChanges?contestId=${contest.id}`;
+        
+        await this.rateLimiter.getInQueue();
+
+        let resp = await fetch(this.baseURL + queryString)
+            .then(resp => resp.json())
+            .then(resp => {
+                if (resp.status == "OK") {
+                    return resp.result as StandingsEntry[];
+                }
+                throw new Error(`Status NOT OK from cf: ${this.baseURL + queryString}\n` +
+                    `Reason: ${resp.comment ? resp.comment : '<???>'}`);
+            })
+            .catch(err => {
+                console.log("Error when fetching contestData: ", err);
+            })
+
+        if (typeof resp == "undefined") {
+            return [];
+        }
 
         return resp;
     }

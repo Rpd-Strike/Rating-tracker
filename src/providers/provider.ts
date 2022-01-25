@@ -1,4 +1,4 @@
-import { ProviderName, RatingSeries } from "./types";
+import { Contest, ProviderName, RatingSeries, StandingsEntry } from "./types";
 
 export abstract class Provider
 {
@@ -10,5 +10,8 @@ export abstract class Provider
 
     public abstract getUserRatingSeries(
         username: string, timeBegin?: Date, timeEnd?: Date): Promise<RatingSeries | void>
-}
 
+    public abstract getContestList(): Promise<Contest[]>
+
+    public abstract getContestData(contest: Contest): Promise<StandingsEntry[]>
+}

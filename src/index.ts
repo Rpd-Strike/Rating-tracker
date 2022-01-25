@@ -1,4 +1,4 @@
-import { PlotRatingSeries } from "./Commands"
+import { PlotRatingSeries, UpdateContestData } from "./Commands"
 import { getUserGroupsFromFile } from "./lib/readUserGroups";
 import { providerCreator, ProviderName, RatingSeries } from "./providers";
 
@@ -38,10 +38,18 @@ async function main()
     PlotRatingSeries(receivedData as RatingSeries[][], startTime, endTime);
 }
 
+function PercentileRatingRankGraph(): void
+{
+    const CF_Prod = providerCreator("Codeforces");
+    
+    UpdateContestData(CF_Prod, 'data/contests/codeforces');
+}
+
 async function startRatingTracker()
 {
     try {
-        await main();
+        // await main();
+        PercentileRatingRankGraph();
     }
     catch (err) {
         console.error("Error caught in the main process:")
