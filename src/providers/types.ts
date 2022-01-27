@@ -16,8 +16,32 @@ type ContestType = "CF" | "IOI" | "ICPC";
 
 type ContestPhase = "BEFORE" | "CODING" | "PENDING_TESTING" | "TESTING" | "FINISHED";
 
+// <id, ContestData>
 export type SavedContest = Record<string, StandingsEntry>;
 
+// <handle, RatingChange>
+export type RatingTable = Record<string, RatingChange>;
+
+export interface RatingChange
+{
+    contestId: number,
+    contestName?: string,
+    handle: string,
+    ratingUpdateTimeMS?: number,
+    oldRating: number,
+    newRating: number
+}
+
+export interface CF_RatingChange
+{
+    contestId: number,
+    contestName: string,
+    handle: string,
+    rank: number,
+    ratingUpdateTimeSeconds: number,
+    oldRating: number,
+    newRating: number
+}
 
 export interface Contest
 {

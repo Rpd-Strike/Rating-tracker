@@ -9,32 +9,43 @@
 //     "ord2": 'cf_id2'
 // }
 
-import { my_file_exists, my_file_write, my_mkdir } from "../lib/util";
+import { my_file_exists, my_file_read_JSON, my_file_write, my_mkdir } from "../lib/util";
 import { Contest, SavedContest, StandingsEntry } from "../providers";
 import { Provider } from "../providers/provider"
 
-const getContestFilePath = (contest: Contest, path: string): string =>
+const getContestFilePath = (contest: Contest, contestsPath: string): string =>
 {
-    return `${path}/${contest.id}.json`;
+    return `${contestsPath}/${contest.id}.json`;
 }
 
-const IsContestLoaded = async (contest: Contest, path: string): Promise<boolean> =>
+const IsContestLoaded = async (contest: Contest, contestsPath: string): Promise<boolean> =>
 {
-    const exists = await my_file_exists(getContestFilePath(contest, path));
+    const exists = await my_file_exists(getContestFilePath(contest, contestsPath));
     return exists;
 }
 
 const MAX_CONTESTS = 10;
-const USE_MAX_CONTESTS = true;
+const USE_MAX_CONTESTS = false;
 
-const GetContestData = async (contestData: Contest[], provider: Provider, path: string): Promise<void>=>
+const GetContestList = async (provider: Provider): Promise<Contest[]> => 
+{
+    let contestData = (await provider.getContestList())
+        .filter(contest => contest.phase === "FINISHED")
+
+    if (USE_MAX_CONTESTS)
+        contestData = contestData.slice(0, MAX_CONTESTS);
+
+    return contestData;
+}
+
+const GetContestData = async (contestData: Contest[], provider: Provider, contestsPath: string): Promise<void>=>
 {
     let weird_fails = 0;
 
     let promises = contestData.map((contest) => {
         const promise = new Promise<boolean>(async (resolve, reject) => {
             // check if contest is already loaded
-            if (await IsContestLoaded(contest, path))
+            if (await IsContestLoaded(contest, contestsPath))
                 return resolve(false);
             // get contest data from provider
 
@@ -53,7 +64,7 @@ const GetContestData = async (contestData: Contest[], provider: Provider, path: 
 
             // save to file
             const raw_string = JSON.stringify(myobj, null, 2);
-            await my_file_write(getContestFilePath(contest, path), raw_string);
+            await my_file_write(getContestFilePath(contest, contestsPath), raw_string);
             
             resolve(true);
             console.log(`Saved data for contestId: ${contest.id}`);
@@ -77,56 +88,57 @@ const GetContestData = async (contestData: Contest[], provider: Provider, path: 
 }
 
 
-const ComputeOrder = async (contestData: Contest[], path: string): Promise<void> =>
+const ComputeOrder = async (contestData: Contest[], orderPath: string): Promise<void> =>
 {
     let order: Contest[] = []
     contestData.forEach(contest => order.push(contest));
-    order.sort((a, b) => b.startTime - a.startTime);
-    console.log(`First: `);
-    console.log(order[0])
-    for (let i = 1; i < order.length; ++i) {
-        if (order[i - 1].startTime < order[i].startTime) {
-            console.log('Ordine invers crescatoare incorecta:');
-            console.log(order[i - 1]);
-            console.log(order[i]);
-        }
-    }
     order.sort((a, b) => a.startTime - b.startTime);
-    for (let i = 1; i < order.length; ++i) {
-        if (order[i - 1].startTime > order[i].startTime) {
-            console.log('Ordine crescatoare incorecta:');
-            console.log(order[i - 1]);
-            console.log(order[i]);
-        }
-    }
+    
     console.log(`First: `);
     console.log(order[0])
     
-    console.log(`Order has ${order.length}`);
+    console.log(`Order has ${order.length} contests`);
 
-    const orderPath = `${path}/order.json`;
     const raw_string = JSON.stringify(order, null, 2);
     await my_file_write(orderPath, raw_string);
 } 
 
+// We assume the contests in otderFile exists in the contestsFolder
+// We save the rating tables with all the users after every contest
+// in ratingTablesFolder/<contestiId>.json
+const ComputeRatingTables = async (
+        contestsFolder: string, 
+        orderFile: string, 
+        ratingTablesFolder: string): Promise<void> =>
+{
+    const order: Contest[] = await my_file_read_JSON(orderFile);
+    
+}
+
 // contests are saved in json in format: "data/contests/<id>.json"
 const UpdateContestData = async (provider: Provider, path: string): Promise<void> =>
 {
-    // step 1: Create working folder
-    await my_mkdir(path, {recursive: true});
+    // step 1: Create working folders
+    const provFolder = `${path}/${provider.name}`;
+    const ratingTablesFolder = `${provFolder}/rating_tables`;
+    const orderFile = `${provFolder}/order.json`;
+    const contestsFolder = `${provFolder}/contests`;
+
+    await my_mkdir(provFolder, {recursive: true});
+    await my_mkdir(contestsFolder, {recursive: true});
+    await my_mkdir(ratingTablesFolder, {recursive: true});
 
     // step 2: Get contest list
-    let contestData = (await provider.getContestList())
-        .filter(contest => contest.phase === "FINISHED")
-
-    if (USE_MAX_CONTESTS)
-        contestData = contestData.slice(0, MAX_CONTESTS);
+    const contestData = await GetContestList(provider);
 
     // step3: Get contest data for each
-    await GetContestData(contestData, provider, path);
+    await GetContestData(contestData, provider, contestsFolder);
 
     // step 4: Redo order
-    await ComputeOrder(contestData, path);
+    await ComputeOrder(contestData, orderFile);
+
+    // step 5: Redo rating tables
+    await ComputeRatingTables(contestsFolder, orderFile, ratingTablesFolder);
 }
 
 export { UpdateContestData };

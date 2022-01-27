@@ -42,7 +42,7 @@ function PercentileRatingRankGraph(): void
 {
     const CF_Prod = providerCreator("Codeforces");
     
-    UpdateContestData(CF_Prod, 'data/contests/codeforces');
+    UpdateContestData(CF_Prod, 'data');
 }
 
 async function startRatingTracker()

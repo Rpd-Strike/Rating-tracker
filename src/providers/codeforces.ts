@@ -1,7 +1,7 @@
 import { CF_Contest, CF_RatingChange, CF_User, Contest, ProviderName, RatingSeries, StandingsEntry } from "./types";
 import { Provider } from "./provider";
-import "isomorphic-fetch"
 import RateLimiterQueue from "../Queues/RateLimiterQueue";
+import "isomorphic-fetch"
 
 class CodeforcesProvider extends Provider
 {
@@ -21,7 +21,7 @@ class CodeforcesProvider extends Provider
         const obj = {
             ...CF_contest,
             startTime: CF_contest.startTimeSeconds * 1000
-        } 
+        }
         return obj;
     }
 
