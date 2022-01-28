@@ -9,8 +9,9 @@
 //     "ord2": 'cf_id2'
 // }
 
+import { stringify } from "querystring";
 import { my_file_exists, my_file_read_JSON, my_file_write, my_mkdir } from "../lib/util";
-import { Contest, SavedContest, StandingsEntry } from "../providers";
+import { Contest, RatingChange, RatingTable, SavedContest, Saved_RatingChange, StandingsEntry } from "../providers";
 import { Provider } from "../providers/provider"
 
 const getContestFilePath = (contest: Contest, contestsPath: string): string =>
@@ -103,6 +104,24 @@ const ComputeOrder = async (contestData: Contest[], orderPath: string): Promise<
     await my_file_write(orderPath, raw_string);
 } 
 
+const printStatistics = (table: RatingTable): void =>
+{
+    const nowTime = new Date().getTime();
+    const activeTimeMS = 6 * 31 * 24 * 60 * 60 * 1000;
+    const allHandles = Object.keys(table.ratingChanges)
+    const allUsersCnt = allHandles.length;
+    const activeUsersCnt = allHandles
+        .filter(handle => {
+            const ratingUpdateTime = table.ratingChanges[handle].ratingUpdateTimeMS;
+            const contestUpdateTime = table.contest.startTime;
+            return ratingUpdateTime + activeTimeMS >= contestUpdateTime
+        })
+        .length;
+
+    console.log(`Contest id: ${table.contest.id} / ${table.contest.name}`)
+    console.log(`  Active Users / All users: ${activeUsersCnt}/${allUsersCnt}`)
+}
+
 // We assume the contests in otderFile exists in the contestsFolder
 // We save the rating tables with all the users after every contest
 // in ratingTablesFolder/<contestiId>.json
@@ -111,8 +130,56 @@ const ComputeRatingTables = async (
         orderFile: string, 
         ratingTablesFolder: string): Promise<void> =>
 {
-    const order: Contest[] = await my_file_read_JSON(orderFile);
     
+    const updateRatingTable = 
+    async (contest: Contest, ratingTable?: RatingTable): 
+        Promise<{
+            cumulated: RatingTable,
+            modified: RatingTable}> =>
+    {
+        const contestData: SavedContest = 
+        await my_file_read_JSON(getContestFilePath(contest, contestsFolder));
+        
+        console.log(`Read JSON contest data`);
+
+        if (ratingTable === undefined) {
+            ratingTable = {contest: contest, ratingChanges: {}};
+        }
+
+        let onlyModifiedRatings: RatingTable = {
+            contest: contest,
+            ratingChanges: {}
+        }
+        ratingTable.contest = contest;
+        
+        for (const handle in contestData) {
+            const ratingChange: Saved_RatingChange = {
+                handle: handle,
+                newRating: contestData[handle].newRating,
+                ratingUpdateTimeMS: contest.startTime,
+            }
+            ratingTable.ratingChanges[handle] = ratingChange;
+            onlyModifiedRatings.ratingChanges[handle] = ratingChange;
+        }
+        
+        return {cumulated: ratingTable, modified: onlyModifiedRatings};
+    }
+    console.log(`Compute rating tables for: ${orderFile}`)
+    
+    const order: Contest[] = await my_file_read_JSON(orderFile);
+    let ratingTable = (await updateRatingTable(order[0])).cumulated;
+    for (const contest of order) {
+        console.log(`Compute rating tables for: ${contest.name}`)
+        
+        const tables = await updateRatingTable(contest, ratingTable);
+        const raw_string = JSON.stringify(tables.modified);
+        await my_file_write(`${ratingTablesFolder}/${ratingTable.contest.id}.json`, raw_string);
+        
+        console.log(`Saved ratingTable to File`)
+        
+        ratingTable = tables.cumulated;
+        printStatistics(ratingTable);
+    }
 }
 
 // contests are saved in json in format: "data/contests/<id>.json"

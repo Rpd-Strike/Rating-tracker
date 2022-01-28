@@ -19,15 +19,25 @@ type ContestPhase = "BEFORE" | "CODING" | "PENDING_TESTING" | "TESTING" | "FINIS
 // <id, ContestData>
 export type SavedContest = Record<string, StandingsEntry>;
 
-// <handle, RatingChange>
-export type RatingTable = Record<string, RatingChange>;
+export interface RatingTable
+{
+    contest: Contest,
+    ratingChanges: Record<string, Saved_RatingChange>,
+};
+
+export interface Saved_RatingChange
+{
+    handle: string,
+    ratingUpdateTimeMS: number,
+    newRating: number
+}
 
 export interface RatingChange
 {
     contestId: number,
     contestName?: string,
     handle: string,
-    ratingUpdateTimeMS?: number,
+    ratingUpdateTimeMS: number,
     oldRating: number,
     newRating: number
 }
